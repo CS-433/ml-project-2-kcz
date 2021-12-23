@@ -1,4 +1,5 @@
 import numpy as np
+from PIL import Image
 
 def rescale_image(img):
     """
@@ -33,3 +34,22 @@ def threshold(img, alpha):
     result[~idx] = 0
 
     return result
+
+
+def pad_img(img, frame):
+    """
+    Add black padding to an image. The amount of vertical padding
+    is specified by `frame[0]`, whereas the amount of horizontal
+    padding is specified by `frame[1]`.
+    """
+    pad_x = img.shape[0] + frame[0] * 2
+    pad_y = img.shape[1] + frame[1] * 2
+    padding = np.zeros(shape=(pad_x, pad_y))
+    padding[frame[0]:-frame[0], frame[1]:-frame[1]] = img
+
+    return padding
+
+
+def save_img(img, path):
+    saved = Image.fromarray(np.uint8(img * 255)).convert('RGB')
+    saved.save(path)

@@ -45,16 +45,6 @@ def recomp_img(df, img):
 
 
 
-def pad_img(img, frame):
-    pad_x = img.shape[0] + frame[0] * 2
-    pad_y = img.shape[1] + frame[1] * 2
-    padding = np.zeros(shape=(pad_x, pad_y))
-    padding[frame[0]:-frame[0], frame[1]:-frame[1]] = img
-
-    return padding
-
-
-
 
 def pipeline(src, whole, all_tufts):
     if (not os.path.exists(src)):
@@ -62,6 +52,7 @@ def pipeline(src, whole, all_tufts):
     print("Processing {img}".format(img=src))
 
     img = np.array(Image.open(src)).astype(np.float32)
+    out_name = src.split('.')[-2].split('/')[-1]
 
     # Crop
     img = img[245:575, 30:-20]
@@ -75,23 +66,26 @@ def pipeline(src, whole, all_tufts):
     img = 1 - img
     th_size = (10, 10)
     img = ndimage.white_tophat(img, size=th_size)
+    #save_img(img, '../output/{name}_tophat.tiff'.format(name=out_name))
 
     # Better separate values
     img = separate(img, 6)
 
     # Treshold image
     img = threshold(img, 0.1)
+    #save_img(img, '../output/{name}_thresh.tiff'.format(name=out_name))
 
     # Extract blobs
     img = create_blobs(img, 2, 0.35)
 
     # Add padding for dataframe creation
     img = pad_img(img, frame)
+    #save_img(img, '../output/{name}_blobs.tiff'.format(name=out_name))
 
     # Create dataframe
     blobs_df = create_dataframe(img, wing_base, blob_processor)#, tuft_processor)
 
-    out_name = src.split('.')[-2].split('/')[-1]
+
     blobs_df.to_json('../output/{name}.json'.format(name=out_name))
 
     if (whole):
